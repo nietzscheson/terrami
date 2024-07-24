@@ -6,7 +6,12 @@ tasks:
     cmds:
       - echo "Getting AWS STS credentials..."
       - aws sts get-caller-identity
-
+  packer.init:
+    desc: Initialize Packer
+    cmds:
+      - echo "Initializing Packer..."
+      - packer init -upgrade packer.pkr.hcl
+    dir: ./packer
   packer.format:
     desc: Format the Packer Template
     dir: ./packer
@@ -26,7 +31,7 @@ tasks:
     dir: ./packer
     cmds:
       - echo "Building Packer image..."
-      - packer build packer.pkr.hcls
+      - packer build packer.pkr.hcl
 
   ansible.check:
     desc: Check the Ansible Playbook
@@ -34,6 +39,13 @@ tasks:
     cmds:
       - echo "Checking Ansible playbook..."
       - ansible-playbook --check playbook.yml
+
+  terraform.init:
+    desc: Initialize Terraform
+    dir: ./terraform
+    cmds:
+      - echo "Initializing Terraform..."
+      - terraform init
 
   terraform.format:
     desc: Format the Terraform Code

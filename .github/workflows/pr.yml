@@ -52,12 +52,16 @@ jobs:
     - name: Install custom nix env
       if: steps.myCacheStep.outputs.cache-hit != 'true'
       run: nix-env -f shell.nix -i '.*'
+    - name: Packer Init
+      run: nix-shell --run "task packer.init"
     - name: Packer Format
       run: nix-shell --run "task packer.format"
     - name: Packer Validate
       run: nix-shell --run "task packer.validate"
     - name: Packer Build
       run: nix-shell --run "task packer.build"
+    - name: Terraform Init
+      run: nix-shell --run "task terraform.init"
     - name: Terraform Format
       run: nix-shell --run "task terraform.format"
     - name: Terraform Validate
