@@ -1,0 +1,71 @@
+version: "3"
+
+tasks:
+  aws.sts:
+    desc: Who am I in AWS
+    cmds:
+      - echo "Getting AWS STS credentials..."
+      - aws sts get-caller-identity
+
+  packer.format:
+    desc: Format the Packer Template
+    dir: ./packer
+    cmds:
+      - echo "Formatting Packer template..."
+      - packer fmt packer.pkr.hcl
+
+  packer.validate:
+    desc: Validate the Packer Template
+    dir: ./packer
+    cmds:
+      - echo "Validating Packer template..."
+      - packer validate packer.pkr.hcl
+
+  packer.build:
+    desc: Build the Packer Image
+    dir: ./packer
+    cmds:
+      - echo "Building Packer image..."
+      - packer build packer.pkr.hcls
+
+  ansible.check:
+    desc: Check the Ansible Playbook
+    dir: ./packer
+    cmds:
+      - echo "Checking Ansible playbook..."
+      - ansible-playbook --check playbook.yml
+
+  terraform.format:
+    desc: Format the Terraform Code
+    dir: ./terraform
+    cmds:
+      - echo "Formatting Terraform code..."
+      - terraform fmt
+
+  terraform.validate:
+    desc: Validate the Terraform Code
+    dir: ./terraform
+    cmds:
+      - echo "Validating Terraform code..."
+      - terraform validate
+
+  terraform.plan:
+    desc: Plan the Terraform Deployment
+    dir: ./terraform
+    cmds:
+      - echo "Planning Terraform deployment..."
+      - terraform plan
+
+  terraform.apply:
+    desc: Apply the Terraform Deployment
+    dir: ./terraform
+    cmds:
+      - echo "Applying Terraform deployment..."
+      - terraform apply -auto-approve
+
+  terraform.destroy:
+    desc: Destroy the Terraform Deployment
+    dir: ./terraform
+    cmds:
+      - echo "Destroying Terraform deployment..."
+      - terraform destroy -auto-approve

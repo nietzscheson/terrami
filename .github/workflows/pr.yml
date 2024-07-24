@@ -1,0 +1,66 @@
+name: Build and Test on Pull Request
+
+on: [pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      ### AWS ###
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+      NIXPKGS_ALLOW_UNFREE: 1
+    steps:
+    - uses: actions/checkout@v3
+    - run: |
+        # Create with liberal rights, otherwise cache action will complain
+        # about permission errors.
+        sudo mkdir -p /nix/store
+        sudo chmod -R 777 /nix
+    - name: Cache nix env take N+1
+      id: myCacheStep
+      uses: actions/cache@v2
+      with:
+        path: |
+          # See https://github.com/actions/cache/pull/726
+          /nix/store/**
+          # Missing something?
+          /nix/var/nix/*/*
+          /nix/var/nix/db/*
+          /nix/var/nix/db/*/**
+          !/nix/var/nix/daemon-socket/socket
+          !/nix/var/nix/userpool/*
+          !/nix/var/nix/gc.lock
+          !/nix/var/nix/db/big-lock
+          !/nix/var/nix/db/reserved
+        key: ${{ runner.os }}-nix-store
+
+    - uses: cachix/install-nix-action@v18
+      with:
+        nix_path: nixpkgs=channel:nixos-unstable
+
+    - name: Cache Terraform directory
+      uses: actions/cache@v2
+      with:
+        path: |
+          .terraform
+        key: ${{ runner.os }}-terraform-${{ hashFiles('**/*.tf') }}
+        restore-keys: |
+          ${{ runner.os }}-terraform-
+
+    - name: Install custom nix env
+      if: steps.myCacheStep.outputs.cache-hit != 'true'
+      run: nix-env -f shell.nix -i '.*'
+    - name: Packer Format
+      run: nix-shell --run "task packer.format"
+    - name: Packer Validate
+      run: nix-shell --run "task packer.validate"
+    - name: Packer Build
+      run: nix-shell --run "task packer.build"
+    - name: Terraform Format
+      run: nix-shell --run "task terraform.format"
+    - name: Terraform Validate
+      run: nix-shell --run "task terraform.validate"
+    - name: Terraform Apply
+      run: nix-shell --run "task terraform.apply"
